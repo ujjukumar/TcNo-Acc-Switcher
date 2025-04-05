@@ -20,12 +20,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Security.Policy;
 using System.Security.Principal;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -87,10 +89,11 @@ namespace TcNo_Acc_Switcher_Updater
     {
         private const string MinimumVc = "14.30.30704";
         // Dictionaries of file paths, as well as MD5 Hashes
-        private static Dictionary<string, string> _oldDict = new();
-        private static Dictionary<string, string> _newDict = new();
-        private static Dictionary<string, string> _allNewDict = new();
-        private static List<string> _patchList = new();
+        private static Dictionary<string, string> _oldDict = [];
+        private static Dictionary<string, string> _newDict = [];
+        private static Dictionary<string, string> _allNewDict = [];
+        private static readonly HttpClient _httpClient = new();
+        private static List<string> _patchList = [];
 
 #pragma warning disable CA2211 // Non-constant fields should not be visible - Set as launch parameter
         public static bool VerifyAndClose;
@@ -515,7 +518,7 @@ namespace TcNo_Acc_Switcher_Updater
             }
         }
 
-        private void DownloadCefNow()
+        private async void DownloadCefNow()
         {
             // Check if VCRuntime 2015-2022 installed or not. If not, download and install.
             if (!IsVcRuntimeInstalled())
@@ -537,14 +540,14 @@ namespace TcNo_Acc_Switcher_Updater
             // Download CEF files from tcno.co
             SetStatusAndLog("Preparing to install Chrome Embedded Framework");
             SetStatus("Checking latest version number");
-            var client = new WebClient();
+            string url;
+
 #if DEBUG
-            latestAvailable = client.DownloadString(new Uri("https://tcno.co/Projects/AccSwitcher/api?debug&v=" +
-                                              _currentVersion));
+            url = $"https://tcno.co/Projects/AccSwitcher/api?debug&v={_currentVersion}";
 #else
-             latestAvailable = client.DownloadString(new Uri("https://tcno.co/Projects/AccSwitcher/api?v=" +
-                                                          _currentVersion));
+            url = $"https://tcno.co/Projects/AccSwitcher/api?v={_currentVersion}";
 #endif
+            latestAvailable = await _httpClient.GetStringAsync(url);
             DoUpdate(cef: true);
         }
 
@@ -553,20 +556,34 @@ namespace TcNo_Acc_Switcher_Updater
         /// </summary>
         /// <param name="uri">Download from</param>
         /// <param name="destination">Download to</param>
-        public void DownloadFile(Uri uri, string destination)
+        public async Task DownloadFileAsync(Uri uri, string destination, IProgress<double>? progress = null)
         {
-            using var wc = new WebClient();
-            wc.DownloadProgressChanged += OnClientOnDownloadProgressChanged;
-            wc.DownloadFileCompleted += HandleDownloadComplete;
+            using var response = await _httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
 
-            var syncObject = new object();
-            lock (syncObject)
+            var totalBytes = response.Content.Headers.ContentLength ?? -1L;
+            var canReportProgress = totalBytes != -1 && progress != null;
+
+            await using var contentStream = await response.Content.ReadAsStreamAsync();
+            await using var fileStream = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+
+            var buffer = new byte[8192];
+            long totalRead = 0;
+            int bytesRead;
+
+            while ((bytesRead = await contentStream.ReadAsync(buffer.AsMemory(0, buffer.Length))) != 0)
             {
-                wc.DownloadFileAsync(uri, destination, syncObject);
-                //This would block the thread until download completes
-                _ = Monitor.Wait(syncObject);
+                await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead));
+                totalRead += bytesRead;
+
+                if (canReportProgress)
+                {
+                    double percent = (double)totalRead / totalBytes * 100;
+                    progress!.Report(percent);
+                }
             }
         }
+
 
         public static string AppDataFolder =>
             Directory.GetParent(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? string.Empty)?.FullName;
@@ -703,7 +720,7 @@ namespace TcNo_Acc_Switcher_Updater
                 updateFilePath = Path.Join(_updaterDirectory, _latestVersion + ".7z");
                 if (File.Exists(updateFilePath)) File.Delete(updateFilePath);
 
-                DownloadFile(new Uri(downloadUrl), updateFilePath);
+                _ = DownloadFileAsync(new Uri(downloadUrl), updateFilePath);
                 SetStatusAndLog("Download complete.");
 
                 // Apply the update.
@@ -717,7 +734,8 @@ namespace TcNo_Acc_Switcher_Updater
                     archiveFile.Extract("temp_update", true); // extract all
                 }
                 if (File.Exists("UpdateFinalizeLog.txt")) File.Delete("UpdateFinalizeLog.txt");
-            } catch (Exception e)
+            }
+            catch (Exception)
             {
                 SetStatusAndLog("Error!");
                 WriteLine("There was an error with either downloading the latest version, or extracting.");
@@ -775,19 +793,26 @@ namespace TcNo_Acc_Switcher_Updater
         /// </summary>
         private void VerifyFiles()
         {
-            var client = new WebClient();
+            using var client = new HttpClient();
+            string latestAvailable;
+
 #if DEBUG
-            latestAvailable = client.DownloadString(new Uri("https://tcno.co/Projects/AccSwitcher/api?debug&v=" +
-                                              _currentVersion));
+            latestAvailable = client
+                .GetStringAsync($"https://tcno.co/Projects/AccSwitcher/api?debug&v={_currentVersion}")
+                .GetAwaiter()
+                .GetResult();
 #else
-             latestAvailable = client.DownloadString(new Uri("https://tcno.co/Projects/AccSwitcher/api?v=" +
-                                                          _currentVersion));
+            latestAvailable = client
+                .GetStringAsync($"https://tcno.co/Projects/AccSwitcher/api?v={_currentVersion}")
+                .GetAwaiter()
+                .GetResult();
 #endif
-            // Find if using CEF from settings file
 
             var usingCef = usingCEF();
             DoUpdate(cef: usingCef);
         }
+
+
         private static bool usingCEF()
         {
             var path = File.Exists(Path.Join(AppDataFolder, "userdata_path.txt"))
@@ -840,19 +865,39 @@ namespace TcNo_Acc_Switcher_Updater
         /// <param name="updatesAndChanges"></param>
         private void GetUpdatesList(ref Dictionary<string, string> updatesAndChanges)
         {
-            var client = new WebClient();
-            client.Headers.Add("Cache-Control", "no-cache");
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue
+            {
+                NoCache = true
+            };
+
+            string versions;
+            string latest;
+
 #if DEBUG
-            var versions =
-                client.DownloadString(new Uri("https://tcno.co/Projects/AccSwitcher/api/update?debug&v=" +
-                                              _currentVersion));
-            latestAvailable = client.DownloadString(new Uri("https://tcno.co/Projects/AccSwitcher/api?debug&v=" +
-                                              _currentVersion));
+            versions = client
+                .GetStringAsync($"https://tcno.co/Projects/AccSwitcher/api/update?debug&v={_currentVersion}")
+                .GetAwaiter()
+                .GetResult();
+
+            latest = client
+                .GetStringAsync($"https://tcno.co/Projects/AccSwitcher/api?debug&v={_currentVersion}")
+                .GetAwaiter()
+                .GetResult();
 #else
-            var versions = client.DownloadString(new Uri("https://tcno.co/Projects/AccSwitcher/api/update?v=" + _currentVersion));
-             latestAvailable = client.DownloadString(new Uri("https://tcno.co/Projects/AccSwitcher/api?v=" +
-                                                          _currentVersion));
+            versions = client
+                .GetStringAsync($"https://tcno.co/Projects/AccSwitcher/api/update?v={_currentVersion}")
+                .GetAwaiter()
+                .GetResult();
+
+            latest = client
+                .GetStringAsync($"https://tcno.co/Projects/AccSwitcher/api?v={_currentVersion}")
+                .GetAwaiter()
+                .GetResult();
 #endif
+
+            latestAvailable = latest;
+
             try
             {
                 var jUpdates = JObject.Parse(versions)["updates"];
@@ -860,19 +905,19 @@ namespace TcNo_Acc_Switcher_Updater
                 var firstChecked = false;
                 foreach (var jToken in jUpdates)
                 {
-                    var jUpdate = (JProperty) jToken;
-                    if (CheckLatest(jUpdate.Name)) break; // Get up to the current version
+                    var jUpdate = (JProperty)jToken;
+                    if (CheckLatest(jUpdate.Name)) break;
+
                     if (!firstChecked)
                     {
                         firstChecked = true;
                         _latestVersion = jUpdate.Name;
-                        if (CheckLatest(_latestVersion)) // If up to date or newer
-                            break;
+                        if (CheckLatest(_latestVersion)) break;
                     }
 
                     var updateDetails = jUpdate.Value[0]!.ToString();
-
                     updatesAndChanges.Add(jUpdate.Name, jUpdate.Value.ToString());
+
                     WriteLine($"Update found: {jUpdate.Name}");
                     WriteLine("- " + updateDetails);
                     WriteLine("");
@@ -880,6 +925,7 @@ namespace TcNo_Acc_Switcher_Updater
 
                 WriteLine("-------------------------------------------");
                 WriteLine($"Total updates found: {updatesAndChanges.Count}");
+
                 if (updatesAndChanges.Count > 0)
                 {
                     WriteLine("-------------------------------------------");
