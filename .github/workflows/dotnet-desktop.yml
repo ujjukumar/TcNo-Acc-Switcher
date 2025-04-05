@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'     
+        description: 'Log level'
         required: true
         default: 'warning'
       tags:
@@ -14,41 +14,40 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-      - name: Get current date
-        id: date
-        shell: pwsh
-        run: |
-          echo "date=$(Get-Date -Format yyyy-MM-dd)" >> $env:GITHUB_OUTPUT
 
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    - name: Get current date
+      id: date
+      run: echo "date=$(Get-Date -Format 'yyyy-MM-dd')" >> $env:GITHUB_OUTPUT
+      shell: pwsh
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 5.0.x
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-      - name: Restore
-        run: dotnet restore TcNo-Acc-Switcher-Client\TcNo-Acc-Switcher-Client.csproj
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 9.0.x
 
-      - name: Build Debug
-        run: dotnet build TcNo-Acc-Switcher-Client\TcNo-Acc-Switcher-Client.csproj --configuration Debug --no-restore
+    - name: Restore dependencies
+      run: dotnet restore
 
-      - name: Build Release
-        run: dotnet build TcNo-Acc-Switcher-Client\TcNo-Acc-Switcher-Client.csproj --configuration Release --no-restore
+    - name: Build Debug
+      run: dotnet build TcNo-Acc-Switcher-Client\TcNo-Acc-Switcher-Client.csproj --configuration Debug --no-restore
 
-      - name: Upload Debug Build
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.date.outputs.date }} Debug
-          path: TcNo-Acc-Switcher-Client\bin\Debug\net5.0-windows
+    - name: Build Release
+      run: dotnet build TcNo-Acc-Switcher-Client\TcNo-Acc-Switcher-Client.csproj --configuration Release --no-restore
 
-      - name: Upload Release Build
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.date.outputs.date }} Release
-          path: TcNo-Acc-Switcher-Client\bin\Release\net5.0-windows
+    - name: Upload Debug Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.date.outputs.date }} Debug
+        path: TcNo-Acc-Switcher-Client\bin\Debug\net9.0-windows
+
+    - name: Upload Release Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.date.outputs.date }} Release
+        path: TcNo-Acc-Switcher-Client\bin\Release\net9.0-windows
