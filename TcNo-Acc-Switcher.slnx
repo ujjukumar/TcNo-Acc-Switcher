@@ -1,0 +1,72 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="Installer/Installer.vcxproj" Id="3e53d5b9-c3bd-4d56-b228-1605664b35a4">
+    <Platform Project="x64" />
+    <Build Solution="*|x86" Project="false" />
+    <Build Solution="Release|Any CPU" Project="false" />
+  </Project>
+  <Project Path="runas/runas.csproj">
+    <Platform Project="x64" />
+    <Build Solution="*|ARM" Project="false" />
+    <Build Solution="*|ARM64" Project="false" />
+    <Build Solution="*|x86" Project="false" />
+    <Build Solution="Release|Any CPU" Project="false" />
+  </Project>
+  <Project Path="TcNo Account Switcher/TcNo-Acc-Switcher.Packager.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
+    <Platform Project="x64" />
+    <Build Solution="*|ARM" Project="false" />
+    <Build Solution="*|ARM64" Project="false" />
+    <Build Solution="*|x86" Project="false" />
+    <Build Solution="Release|Any CPU" Project="false" />
+    <Deploy Solution="*|x64" />
+    <Deploy Solution="Debug|Any CPU" />
+  </Project>
+  <Project Path="TcNo-Acc-Switcher-Client/TcNo-Acc-Switcher-Client.csproj">
+    <Platform Project="x64" />
+    <Build Solution="*|ARM" Project="false" />
+    <Build Solution="*|ARM64" Project="false" />
+    <Build Solution="*|x86" Project="false" />
+    <Build Solution="Release|Any CPU" Project="false" />
+  </Project>
+  <Project Path="TcNo-Acc-Switcher-Globals/TcNo-Acc-Switcher-Globals.csproj">
+    <Platform Project="x64" />
+    <Build Solution="*|ARM" Project="false" />
+    <Build Solution="*|ARM64" Project="false" />
+    <Build Solution="*|x86" Project="false" />
+    <Build Solution="Release|Any CPU" Project="false" />
+  </Project>
+  <Project Path="TcNo-Acc-Switcher-Server/TcNo-Acc-Switcher-Server.csproj">
+    <Platform Project="x64" />
+    <Build Solution="*|ARM" Project="false" />
+    <Build Solution="*|ARM64" Project="false" />
+    <Build Solution="*|x86" Project="false" />
+    <Build Solution="Release|Any CPU" Project="false" />
+  </Project>
+  <Project Path="TcNo-Acc-Switcher-Tray/TcNo-Acc-Switcher-Tray.csproj">
+    <Platform Project="x64" />
+    <Build Solution="*|ARM" Project="false" />
+    <Build Solution="*|ARM64" Project="false" />
+    <Build Solution="*|x86" Project="false" />
+    <Build Solution="Release|Any CPU" Project="false" />
+  </Project>
+  <Project Path="TcNo-Acc-Switcher-Updater/TcNo-Acc-Switcher-Updater.csproj">
+    <Platform Project="x64" />
+    <Build Solution="*|ARM" Project="false" />
+    <Build Solution="*|ARM64" Project="false" />
+    <Build Solution="*|x86" Project="false" />
+    <Build Solution="Release|Any CPU" Project="false" />
+  </Project>
+  <Project Path="_Updater_Wrapper/_Updater_Wrapper.vcxproj" Id="28bbb9fe-94c5-4c89-af07-c6d28ada0c59">
+    <Platform Project="x64" />
+    <Build Solution="*|x86" Project="false" />
+  </Project>
+</Solution>
