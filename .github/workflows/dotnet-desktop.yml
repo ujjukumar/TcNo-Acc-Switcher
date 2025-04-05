@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'
+        description: 'Log level'     
         required: true
         default: 'warning'
       tags:
-        description: 'Description:'
-        default: 'Manual build from source'
+        description: "Description:"
+        default: "Manual build from source"
 
 jobs:
   build:
@@ -18,36 +18,37 @@ jobs:
     steps:
       - name: Get current date
         id: date
-        run: echo "date=$(Get-Date -Format yyyy-MM-dd)" >> $env:GITHUB_OUTPUT
         shell: pwsh
+        run: |
+          echo "date=$(Get-Date -Format yyyy-MM-dd)" >> $env:GITHUB_OUTPUT
 
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 5.0.x
 
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore TcNo-Acc-Switcher-Client\TcNo-Acc-Switcher-Client.csproj
 
-      - name: Build (Debug)
+      - name: Build Debug
         run: dotnet build TcNo-Acc-Switcher-Client\TcNo-Acc-Switcher-Client.csproj --configuration Debug --no-restore
 
-      - name: Build (Release)
+      - name: Build Release
         run: dotnet build TcNo-Acc-Switcher-Client\TcNo-Acc-Switcher-Client.csproj --configuration Release --no-restore
 
       - name: Upload Debug Build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.date.outputs.date }} Debug
           path: TcNo-Acc-Switcher-Client\bin\Debug\net5.0-windows
 
       - name: Upload Release Build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.date.outputs.date }} Release
           path: TcNo-Acc-Switcher-Client\bin\Release\net5.0-windows
