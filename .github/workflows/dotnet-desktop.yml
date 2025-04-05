@@ -54,3 +54,13 @@ jobs:
       with:
         name: ${{ steps.date.outputs.date }} Release
         path: TcNo-Acc-Switcher-Client\bin\Release\net9.0-windows
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: release-${{ steps.date.outputs.date }}-${{ github.run_number }}
+        name: Release ${{ steps.date.outputs.date }} Build ${{ github.run_number }}
+        body: ${{ github.event.inputs.tags }}
+        files: TcNo-Acc-Switcher-Client/bin/Release/net9.0-windows/TcNo-Acc-Switcher-Client.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
