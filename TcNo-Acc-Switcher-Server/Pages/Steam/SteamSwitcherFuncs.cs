@@ -994,10 +994,11 @@ namespace TcNo_Acc_Switcher_Server.Pages.Steam
         /// </summary>
         public static bool VerifySteamId(string steamId)
         {
-            Globals.DebugWriteLine($@"[Func:Steam\SteamSwitcherFuncs.VerifySteamId] Verifying SteamID: {steamId.Substring(steamId.Length - 4, 4)}");
             const long steamIdMin = 0x0110000100000001;
             const long steamIdMax = 0x01100001FFFFFFFF;
-            if (!IsDigitsOnly(steamId) || steamId.Length != 17) return false;
+            if (string.IsNullOrEmpty(steamId) || !IsDigitsOnly(steamId) || steamId.Length != 17) return false;
+
+            Globals.DebugWriteLine($@"[Func:Steam\SteamSwitcherFuncs.VerifySteamId] Verifying SteamID: {steamId.Substring(steamId.Length - 4, 4)}");
             // Size check: https://stackoverflow.com/questions/33933705/steamid64-minimum-and-maximum-length#40810076
             var steamIdVal = double.Parse(steamId);
             return steamIdVal is > steamIdMin and < steamIdMax;
