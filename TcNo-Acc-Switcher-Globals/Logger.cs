@@ -49,6 +49,7 @@ namespace TcNo_Acc_Switcher_Globals
         }
         public static void DebugWriteLine(string s)
         {
+            System.Diagnostics.Debug.WriteLine($@"{DateTime.Now:hh:mm:ss.fff} - {s}");
             // Toggle here so it only shows in Verbose mode etc.
             if (VerboseMode) Console.WriteLine($@"{DateTime.Now:hh:mm:ss.fff} - {s}");
         }
@@ -77,6 +78,7 @@ namespace TcNo_Acc_Switcher_Globals
         /// </summary>
         public static void WriteToLog(string s)
         {
+            System.Diagnostics.Debug.WriteLine(s);
             var attempts = 0;
             while (attempts <= 30) // Up to 3 seconds
             {

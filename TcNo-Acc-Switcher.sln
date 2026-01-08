@@ -13,11 +13,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcNo-Acc-Switcher-Tray", "T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TcNo-Acc-Switcher-Updater", "TcNo-Acc-Switcher-Updater\TcNo-Acc-Switcher-Updater.csproj", "{FAAD2F0A-4948-47F6-B9B0-8824C5341738}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Installer", "Installer\Installer.vcxproj", "{3E53D5B9-C3BD-4D56-B228-1605664B35A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_First_Run_Installer", "TcNo-Acc-Switcher-Installer\TcNo-Acc-Switcher-Installer.csproj", "{3E53D5B9-C3BD-4D56-B228-1605664B35A4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C74FF569-0857-4C11-BF66-5A59290FAC85}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_Updater_Wrapper", "_Updater_Wrapper\_Updater_Wrapper.vcxproj", "{28BBB9FE-94C5-4C89-AF07-C6D28ADA0C59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_Wrapper", "TcNo-Acc-Switcher-Wrapper\TcNo-Acc-Switcher-Wrapper.csproj", "{28BBB9FE-94C5-4C89-AF07-C6D28ADA0C59}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "runas", "runas\runas.csproj", "{2C8D51E2-3B55-4EBF-A6D9-9B824AB2D456}"
 EndProject

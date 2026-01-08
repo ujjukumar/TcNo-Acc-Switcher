@@ -2,9 +2,10 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows7.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <RootNamespace>TcNo_Acc_Switcher_Client</RootNamespace>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>favicon.ico</ApplicationIcon>
     <Version>2025.11.20.03</Version>
     <Authors>TroubleChute (Wesley Pyburn)</Authors>
@@ -16,25 +17,24 @@
     <AssemblyName>TcNo-Acc-Switcher</AssemblyName>
     <AssemblyVersion>2025.11.20.03</AssemblyVersion>
     <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
     <SignAssembly>false</SignAssembly>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <AnalysisLevel>6.0</AnalysisLevel>
-    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+    <!--<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>-->
 	<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <NoWarn>$(NoWarn);MSB3277</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CefSharp.Common" Version="141.0.110" />
-    <PackageReference Include="CefSharp.Wpf.NETCore" Version="141.0.110">
+    <PackageReference Include="CefSharp.Common" Version="143.0.90" />
+    <PackageReference Include="CefSharp.Wpf.NETCore" Version="143.0.90">
      <NoWarn>NU1701</NoWarn>
     </PackageReference>
-    <PackageReference Include="chromiumembeddedframework.runtime.win-arm64" Version="141.0.11" />
-    <PackageReference Include="chromiumembeddedframework.runtime.win-x64" Version="141.0.11" />
-    <PackageReference Include="chromiumembeddedframework.runtime.win-x86" Version="141.0.11" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3595.46">
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3650.58">
       <NoWarn>MSB3277</NoWarn>
     </PackageReference>
+    <PackageReference Include="System.Private.Uri" Version="4.3.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -68,10 +68,15 @@
   </Target>
 
   <ItemGroup>
-    <Reference Include="WindowsFormsIntegration">
-      <HintPath>..\..\..\..\..\..\Program Files\Reference Assemblies\Microsoft\Framework\v3.0\WindowsFormsIntegration.dll</HintPath>
-    </Reference>
+    <PackageReference Update="chromiumembeddedframework.runtime.win-arm64" Version="143.0.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="chromiumembeddedframework.runtime.win-x64" Version="143.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="chromiumembeddedframework.runtime.win-x86" Version="143.0.9" />
+  </ItemGroup>
 
 </Project>
