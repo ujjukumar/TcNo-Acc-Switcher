@@ -22,12 +22,20 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <AnalysisLevel>6.0</AnalysisLevel>
     <!--<SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>-->
-	<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    <NoWarn>$(NoWarn);MSB3277</NoWarn>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="CefSharp.Common" Version="143.0.90" />
+	    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+	    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+	  </PropertyGroup>
+	
+	  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+	    <PublishTrimmed>true</PublishTrimmed>
+	    <PublishSingleFile>true</PublishSingleFile>
+	    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+	    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	    <!-- Prevent trimming of WPF/WinForms logic that might be used via reflection -->
+	    <TrimMode>partial</TrimMode>
+	  </PropertyGroup>
+	
+	  <ItemGroup>    <PackageReference Include="CefSharp.Common" Version="143.0.90" />
     <PackageReference Include="CefSharp.Wpf.NETCore" Version="143.0.90">
      <NoWarn>NU1701</NoWarn>
     </PackageReference>
@@ -45,6 +53,12 @@
     <ProjectReference Include="..\TcNo-Acc-Switcher-Updater\TcNo-Acc-Switcher-Updater.csproj">
       <Private>true</Private>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <ProjectReference Include="..\TcNo-Acc-Switcher-Installer\TcNo-Acc-Switcher-Installer.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\TcNo-Acc-Switcher-Wrapper\TcNo-Acc-Switcher-Wrapper.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>
 

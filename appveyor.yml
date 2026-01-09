@@ -32,15 +32,14 @@ build:
   verbosity: minimal
 
 install:
-  - vcpkg install curl:x64-windows-static curl[ssl]:x64-windows-static vcpkg-cmake:x64-windows vcpkg-cmake-config:x64-windows zlib:x64-windows-static --triplet=x64-windows-release
-  - vcpkg integrate install
   - choco upgrade aria2 -y
  
 # Build configuration
 build_script:
   - nuget restore TcNo-Acc-Switcher.sln
   - dotnet publish TcNo-Acc-Switcher-Installer/TcNo-Acc-Switcher-Installer.csproj -c Release -r win-x64 --self-contained true -o %APPVEYOR_BUILD_FOLDER%\TcNo-Acc-Switcher-Client\bin\Installer\
-  - dotnet publish TcNo-Acc-Switcher-Wrapper/TcNo-Acc-Switcher-Wrapper.csproj -c Release -r win-x64 --self-contained true -o %APPVEYOR_BUILD_FOLDER%\TcNo-Acc-Switcher-Client\bin\Wrapper\  - msbuild runas/runas.csproj /p:Configuration=%CONFIGURATION% /p:Platform=x64 /p:OutputPath=%APPVEYOR_BUILD_FOLDER%\TcNo-Acc-Switcher-Client\bin\runas\x64\Release\net8.0\
+  - dotnet publish TcNo-Acc-Switcher-Wrapper/TcNo-Acc-Switcher-Wrapper.csproj -c Release -r win-x64 --self-contained true -o %APPVEYOR_BUILD_FOLDER%\TcNo-Acc-Switcher-Client\bin\Wrapper\
+  - msbuild runas/runas.csproj /p:Configuration=%CONFIGURATION% /p:Platform=x64 /p:OutputPath=%APPVEYOR_BUILD_FOLDER%\TcNo-Acc-Switcher-Client\bin\runas\x64\Release\net10.0\
   - msbuild TcNo-Acc-Switcher-Globals/TcNo-Acc-Switcher-Globals.csproj /p:Configuration=%CONFIGURATION% /p:Platform=x64
   - msbuild TcNo-Acc-Switcher-Tray/TcNo-Acc-Switcher-Tray.csproj /p:Configuration=%CONFIGURATION% /p:Platform=x64
   - msbuild TcNo-Acc-Switcher-Updater/TcNo-Acc-Switcher-Updater.csproj /p:Configuration=%CONFIGURATION% /p:Platform=x64

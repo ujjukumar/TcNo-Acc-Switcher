@@ -15,6 +15,7 @@
     <Description>Server for the TcNo Account Switcher (Blazor backend)</Description>
     <Platforms>x64</Platforms>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>

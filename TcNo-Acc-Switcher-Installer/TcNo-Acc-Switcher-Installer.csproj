@@ -10,9 +10,11 @@
     <StackTraceSupport>false</StackTraceSupport>
     <OptimizationPreference>Size</OptimizationPreference>
     <AssemblyName>_First_Run_Installer</AssemblyName>
-	<Platforms>x64</Platforms>
-	<PlatformTarget>x64</PlatformTarget>
-	<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutputPath>$(SolutionDir)TcNo-Acc-Switcher-Client\bin\Installer\</OutputPath>
   </PropertyGroup>
 
 </Project>
