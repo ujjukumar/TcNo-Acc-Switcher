@@ -10,6 +10,8 @@ on:
       tags:
         description: "Description:"
         default: "Manual build from source"
+  pull_request:
+    branches: [ "**" ]
 
 jobs:
 
@@ -19,16 +21,16 @@ jobs:
     
     - name: Get current date
       id: date
-      run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+      run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
       
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
     # Install the .NET Core workload
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
@@ -46,14 +48,14 @@ jobs:
 
     # Debug
     - name: Upload Debug
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.date.outputs.date }} Debug
         path: TcNo-Acc-Switcher-Client\bin\Debug\net8.0-windows
         
     # Release
     - name: Upload Release
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.date.outputs.date }} Release
         path: TcNo-Acc-Switcher-Client\bin\Release\net8.0-windows
