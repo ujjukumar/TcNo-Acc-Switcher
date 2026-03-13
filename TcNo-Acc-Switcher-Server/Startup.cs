@@ -201,9 +201,9 @@ namespace TcNo_Acc_Switcher_Server
                 AppStats.SaveSettings();
                 if (AppData.UpdatePending) AppSettings.AutoStartUpdaterAsAdmin();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Globals.WriteToLog("Error during process exit cleanup", e);
+                Globals.WriteToLog("Error during process exit cleanup", ex);
             }
         }
 
