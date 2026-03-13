@@ -185,6 +185,36 @@ namespace TcNo_Acc_Switcher_Globals
             ? string.Empty
             : SHA512.Create().ComputeHash(b).Aggregate("", (current, x) => current + $"{x:x2}");
 
+        /// <summary>
+        /// Hashes a password using PBKDF2 with a random salt. Returns "salt:hash" format.
+        /// </summary>
+        public static string HashPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password)) return string.Empty;
+            var salt = RandomNumberGenerator.GetBytes(16);
+            var hash = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password), salt, 100_000, HashAlgorithmName.SHA512, 64);
+            return Convert.ToBase64String(salt) + ":" + Convert.ToBase64String(hash);
+        }
+
+        /// <summary>
+        /// Verifies a password against a stored hash. Supports both new "salt:hash" and legacy SHA512 formats.
+        /// </summary>
+        public static bool VerifyPassword(string password, string storedHash)
+        {
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(storedHash)) return false;
+            if (storedHash.Contains(':'))
+            {
+                // New PBKDF2 format
+                var parts = storedHash.Split(':', 2);
+                var salt = Convert.FromBase64String(parts[0]);
+                var expectedHash = Convert.FromBase64String(parts[1]);
+                var actualHash = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password), salt, 100_000, HashAlgorithmName.SHA512, 64);
+                return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+            }
+            // Legacy SHA512 format (backward compatibility)
+            return storedHash == GetSha256HashString(password);
+        }
+
         public static int GetUnixTimeInt() => (int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
 
         public static string GetUnixTime()

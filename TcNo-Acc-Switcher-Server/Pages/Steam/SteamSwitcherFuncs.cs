@@ -232,9 +232,9 @@ namespace TcNo_Acc_Switcher_Server.Pages.Steam
 
                 return mostRecent.SteamId ?? "";
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //
+                Globals.WriteToLog("Error getting last active Steam user", e);
             }
 
             return "";
@@ -505,9 +505,9 @@ namespace TcNo_Acc_Switcher_Server.Pages.Steam
             {
                 File.WriteAllText(loginUserPath, vdf);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //
+                Globals.WriteToLog($"Failed to write corrected loginusers.vdf to: {loginUserPath}", e);
             }
             return vdf;
         }
@@ -614,7 +614,7 @@ namespace TcNo_Acc_Switcher_Server.Pages.Steam
 
             // 2. Download new copy of user data if not cached.
             _ = Directory.CreateDirectory("LoginCache/Steam/VACCache/");
-            var profileXml = new XmlDocument();
+            var profileXml = new XmlDocument { XmlResolver = null };
             try
             {
                 if (File.Exists(cachedFile))
@@ -688,7 +688,11 @@ namespace TcNo_Acc_Switcher_Server.Pages.Steam
                 // Issue was caused by cached fil. Delete, and re-download.
                 try
                 {
-                    profileXml.Load($"https://steamcommunity.com/profiles/{su.SteamId}?xml=1");
+                    using var httpClient2 = new HttpClient();
+                    httpClient2.Timeout = TimeSpan.FromSeconds(10);
+                    httpClient2.DefaultRequestHeaders.Add("User-Agent", "TcNo Account Switcher");
+                    var xmlContent2 = await httpClient2.GetStringAsync($"https://steamcommunity.com/profiles/{su.SteamId}?xml=1").ConfigureAwait(false);
+                    profileXml.LoadXml(xmlContent2);
                 }
                 catch (Exception ex)
                 {
@@ -983,9 +987,9 @@ namespace TcNo_Acc_Switcher_Server.Pages.Steam
                 SteamSettings.LastAccTimestamp = Globals.GetUnixTimeInt();
                 if (SteamSettings.LastAccName != "") _ = AppData.InvokeVoidAsync("highlightCurrentAccount", SteamSettings.LastAccName);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                //
+                Globals.WriteToLog("Error highlighting current Steam account", e);
             }
         }
 
@@ -994,10 +998,11 @@ namespace TcNo_Acc_Switcher_Server.Pages.Steam
         /// </summary>
         public static bool VerifySteamId(string steamId)
         {
-            Globals.DebugWriteLine($@"[Func:Steam\SteamSwitcherFuncs.VerifySteamId] Verifying SteamID: {steamId.Substring(steamId.Length - 4, 4)}");
             const long steamIdMin = 0x0110000100000001;
             const long steamIdMax = 0x01100001FFFFFFFF;
-            if (!IsDigitsOnly(steamId) || steamId.Length != 17) return false;
+            if (string.IsNullOrEmpty(steamId) || !IsDigitsOnly(steamId) || steamId.Length != 17) return false;
+
+            Globals.DebugWriteLine($@"[Func:Steam\SteamSwitcherFuncs.VerifySteamId] Verifying SteamID: {steamId.Substring(steamId.Length - 4, 4)}");
             // Size check: https://stackoverflow.com/questions/33933705/steamid64-minimum-and-maximum-length#40810076
             var steamIdVal = double.Parse(steamId);
             return steamIdVal is > steamIdMin and < steamIdMax;

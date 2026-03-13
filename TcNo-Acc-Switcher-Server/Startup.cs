@@ -52,7 +52,11 @@ namespace TcNo_Acc_Switcher_Server
             _ = services.AddControllers();
 
             _ = services.AddRazorPages();
+#if DEBUG
             _ = services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
+#else
+            _ = services.AddServerSideBlazor();
+#endif
 
             _ = services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
@@ -66,6 +70,11 @@ namespace TcNo_Acc_Switcher_Server
             _ = services.AddSingleton<Basic>();
             _ = services.AddSingleton<Steam>();
             _ = services.AddSingleton<Lang>();
+
+            // Load configurable values from appsettings
+            var discordId = Configuration["DiscordRpcClientId"];
+            if (!string.IsNullOrWhiteSpace(discordId))
+                AppData.DiscordRpcClientId = discordId;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -105,6 +114,15 @@ namespace TcNo_Acc_Switcher_Server
 
             _ = app.UseStaticFiles(); // Second call due to: https://github.com/dotnet/aspnetcore/issues/19578
 
+            // Security headers
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+                context.Response.Headers["X-Frame-Options"] = "DENY";
+                context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+                await next();
+            });
+
             _ = app.UseRouting();
 
             _ = app.UseEndpoints(endpoints =>
@@ -131,7 +149,7 @@ namespace TcNo_Acc_Switcher_Server
             try
             {
                 if (Directory.Exists(Path.Join(Globals.AppDataFolder, "temp_update"))) Directory.Delete(Path.Join(Globals.AppDataFolder, "temp_update"), true);
-            } catch (Exception) { /* Do nothing */ }
+            } catch (Exception e) { Globals.WriteToLog("Failed to clean up temp_update directory.", e); }
         }
 
         private static void CheckInstallerOptions()
@@ -183,9 +201,9 @@ namespace TcNo_Acc_Switcher_Server
                 AppStats.SaveSettings();
                 if (AppData.UpdatePending) AppSettings.AutoStartUpdaterAsAdmin();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Do nothing, just close.
+                Globals.WriteToLog("Error during process exit cleanup", ex);
             }
         }
 

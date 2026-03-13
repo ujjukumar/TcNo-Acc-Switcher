@@ -113,7 +113,17 @@ namespace TcNo_Acc_Switcher_Server.Pages.General
         public static Task GiFileReadAllText(string file)
         {
             Globals.DebugWriteLine($@"[JSInvoke:General\GeneralInvocableFuncs.GiFileReadAllText] file={file}");
-            return Task.FromResult(File.Exists(file) ? Globals.ReadAllText(file) : "");
+
+            // Prevent path traversal: only allow reads within the user data folder or app directory
+            var fullPath = Path.GetFullPath(file);
+            var allowedRoots = new[] { Path.GetFullPath(Globals.UserDataFolder), Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory) };
+            if (!allowedRoots.Any(root => fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase)))
+            {
+                Globals.WriteToLog($"Blocked path traversal attempt in GiFileReadAllText: {file}");
+                return Task.FromResult("");
+            }
+
+            return Task.FromResult(File.Exists(fullPath) ? Globals.ReadAllText(fullPath) : "");
         }
 
         /// <summary>

@@ -81,14 +81,44 @@
     public string ReturnUrl { get; set; } = "/";
 
     private string _password = "";
+    private static int _failedAttempts;
+    private static DateTime _lockoutUntil = DateTime.MinValue;
 
     private void CheckPassword()
     {
-        AppSettings.PasswordCurrent = Globals.GetSha256HashString(_password);
-        if (AppSettings.PasswordCurrent == AppSettings.PasswordHash)
+        // Brute force protection: lock out after 5 failed attempts for 30 seconds
+        if (DateTime.UtcNow < _lockoutUntil)
+        {
+            var remaining = (int)(_lockoutUntil - DateTime.UtcNow).TotalSeconds;
+            _ = GeneralInvocableFuncs.ShowToast("error", $"Too many attempts. Try again in {remaining}s.");
+            return;
+        }
+
+        if (Globals.VerifyPassword(_password, AppSettings.PasswordHash))
+        {
+            _failedAttempts = 0;
+            // Re-hash with PBKDF2 if stored in legacy format (auto-upgrade)
+            if (!AppSettings.PasswordHash.Contains(':'))
+            {
+                AppSettings.PasswordHash = Globals.HashPassword(_password);
+                AppSettings.SaveSettings();
+            }
             NavManager.NavigateTo(ReturnUrl); // Success! Redirect user back.
+        }
         else
-            _ = GeneralInvocableFuncs.ShowToast("error", Locale["Auth_PassIncorrect"]);
+        {
+            _failedAttempts++;
+            if (_failedAttempts >= 5)
+            {
+                _lockoutUntil = DateTime.UtcNow.AddSeconds(30);
+                _failedAttempts = 0;
+                _ = GeneralInvocableFuncs.ShowToast("error", "Too many failed attempts. Locked out for 30 seconds.");
+            }
+            else
+            {
+                _ = GeneralInvocableFuncs.ShowToast("error", Locale["Auth_PassIncorrect"]);
+            }
+        }
     }
 
 	// This is run before everything is painted on, so that it can get the correct values for the CSS Block.
