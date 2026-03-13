@@ -40,7 +40,6 @@ namespace TcNo_Acc_Switcher_Globals
             return false;
         }
 
-        private static SemaphoreSlim _semaphoreSlim;
         /// <summary>
         /// Downloads a dictionary of URL:FILES over x threads
         /// </summary>
@@ -49,29 +48,22 @@ namespace TcNo_Acc_Switcher_Globals
         /// <returns></returns>
         public static async Task MultiThreadParallelDownloads(Dictionary<string, string> filesWithUrls, int threads = 10)
         {
-            _semaphoreSlim = new SemaphoreSlim(threads, threads);
-            var tasks = filesWithUrls.Select(fileWithUrl => Task.Run(() => DownloadWorker(fileWithUrl))).ToList();
+            using var semaphore = new SemaphoreSlim(threads, threads);
+            var tasks = filesWithUrls.Select(fileWithUrl => Task.Run(async () =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    DebugWriteLine($"[Func:MultiThreadParallelDownloads - DownloadWorker] Downloading: \"{fileWithUrl.Key}\" to \"{fileWithUrl.Value}\"");
+                    await DownloadFileAsync(fileWithUrl.Key, fileWithUrl.Value);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            })).ToList();
 
             await Task.WhenAll(tasks);
-        }
-
-        //private static Random rnd = new Random();
-        private static async Task DownloadWorker(KeyValuePair<string, string> filesWithUrl)
-        {
-            //var threadId = rnd.Next(0, 10000);
-            //Console.WriteLine($@"THREAD CREATED ({threadId}) - {DateTime.Now:hh:mm:ss.fff}");
-
-            await _semaphoreSlim.WaitAsync();
-            try
-            {
-                DebugWriteLine($"[Func:MultiThreadParallelDownloads - DownloadWorker] Downloading: \"{filesWithUrl.Key}\" to \"{filesWithUrl.Value}\"");
-                await DownloadFileAsync(filesWithUrl.Key, filesWithUrl.Value);
-            }
-            finally
-            {
-                //Console.WriteLine($@"THREAD FINISHED ({threadId}) - {DateTime.Now:hh:mm:ss.fff}");
-                _semaphoreSlim.Release();
-            }
         }
 
 
@@ -83,15 +75,19 @@ namespace TcNo_Acc_Switcher_Globals
         /// <returns></returns>
         public static async Task MultiThreadParallelReadUrl(Dictionary<string, string> keysAndUrls, int threads = 3)
         {
-            var semaphore = new SemaphoreSlim(0, threads);
+            using var semaphore = new SemaphoreSlim(threads, threads);
             await Task.WhenAll(keysAndUrls.Select(async dl =>
             {
                 await semaphore.WaitAsync();
+                try
                 {
                     DebugWriteLine($"[Func:MultiThreadDownload] Downloading: \"{dl.Value}\" to \"{dl.Key}\"");
                     await DownloadFileAsync(dl.Value, dl.Key);
                 }
-                semaphore.Release();
+                finally
+                {
+                    semaphore.Release();
+                }
             }));
         }
 

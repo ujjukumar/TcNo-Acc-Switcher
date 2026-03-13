@@ -550,7 +550,7 @@ namespace TcNo_Acc_Switcher_Server.Data
         [JSInvokable]
         public static void SetSwitcherPassword(string pass)
         {
-            PasswordHash = Globals.GetSha256HashString(pass);
+            PasswordHash = Globals.HashPassword(pass);
             SaveSettings();
             _ = GeneralInvocableFuncs.ShowToast("success", Lang["Toast_PasswordChanged"], renderTo: "toastarea");
         }

@@ -32,6 +32,7 @@ namespace TcNo_Acc_Switcher_Server.Data
     {
         private static readonly Lang Lang = Lang.Instance;
         private static AppData _instance = new();
+        public static string DiscordRpcClientId { get; set; } = "973188269405765682";
 
         private static readonly object LockObj = new();
 
@@ -109,7 +110,7 @@ namespace TcNo_Acc_Switcher_Server.Data
 
             var timestamp = Timestamps.Now;
 
-            DiscordClient ??= new DiscordRpcClient("973188269405765682")
+            DiscordClient ??= new DiscordRpcClient(DiscordRpcClientId)
             {
                 Logger = new ConsoleLogger { Level = LogLevel.Warning },
             };

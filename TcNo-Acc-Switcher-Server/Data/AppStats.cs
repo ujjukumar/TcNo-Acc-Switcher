@@ -189,14 +189,14 @@ namespace TcNo_Acc_Switcher_Server.Data
                 File.WriteAllText(tempFile, statsJson);
 
                 // Upload using HTTPClient
-                var httpClient = new HttpClient();
+                using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
                 httpClient.DefaultRequestHeaders.Add("User-Agent", "TcNo Account Switcher");
                 var response = httpClient.PostAsync("https://tcno.co/Projects/AccSwitcher/api/stats/",
                     new FormUrlEncodedContent(new Dictionary<string, string>
                     {
                         ["uuid"] = Uuid,
                         ["statsData"] = statsJson
-                    })).Result;
+                    })).GetAwaiter().GetResult();
 
                 if (response.StatusCode != HttpStatusCode.OK)
                     Globals.WriteToLog("Failed to upload stats file. Status code: " + response.StatusCode);

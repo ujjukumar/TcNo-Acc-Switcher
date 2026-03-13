@@ -677,13 +677,17 @@ namespace TcNo_Acc_Switcher_Client
         }
 
         /// <summary>
-        /// Saves window size when closing.
+        /// Saves window size when closing and disposes browser resources.
         /// </summary>
         protected override void OnClosing(CancelEventArgs e)
         {
             Globals.DebugWriteLine(@"[Func:(Client)MainWindow.xaml.cs.OnClosing]");
             AppSettings.WindowSize = new Point { X = Convert.ToInt32(Width), Y = Convert.ToInt32(Height) };
             AppSettings.SaveSettings();
+
+            // Dispose browser resources to prevent process leaks
+            try { _mView2?.Dispose(); } catch { /* best effort */ }
+            try { _cefView?.Dispose(); } catch { /* best effort */ }
         }
 
         public static void Restart(string args = "", bool admin = false)

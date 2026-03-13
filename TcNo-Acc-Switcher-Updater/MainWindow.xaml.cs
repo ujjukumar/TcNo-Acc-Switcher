@@ -252,6 +252,13 @@ namespace TcNo_Acc_Switcher_Updater
 
         public static void RestartAsAdmin(string args)
         {
+            // Sanitize arguments: only allow safe characters to prevent command injection
+            if (!string.IsNullOrEmpty(args) && !System.Text.RegularExpressions.Regex.IsMatch(args, @"^[a-zA-Z0-9._\-\s/:\\]{0,1024}$"))
+            {
+                Logger.WriteLine($"RestartAsAdmin: Rejected unsafe arguments: {args}");
+                return;
+            }
+
             var proc = new ProcessStartInfo
             {
                 WorkingDirectory = Environment.CurrentDirectory,
@@ -1004,12 +1011,18 @@ namespace TcNo_Acc_Switcher_Updater
         /// <param name="procName">Process name to kill (Will be used as {name}*)</param>
         private void KillProcess(string procName)
         {
+            // Validate process name to prevent command injection
+            if (!System.Text.RegularExpressions.Regex.IsMatch(procName, @"^[a-zA-Z0-9._\-\s]{1,260}$"))
+            {
+                WriteLine($"Invalid process name rejected: {procName}");
+                return;
+            }
             var startInfo = new ProcessStartInfo
             {
                 UseShellExecute = false,
                 WindowStyle = ProcessWindowStyle.Hidden,
                 FileName = "cmd.exe",
-                Arguments = $"/C TASKKILL /F /T /IM {procName}*",
+                Arguments = $"/C TASKKILL /F /T /IM \"{procName}\"*",
                 CreateNoWindow = true,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true

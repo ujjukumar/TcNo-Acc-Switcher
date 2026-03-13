@@ -287,19 +287,23 @@ namespace TcNo_Acc_Switcher_Globals
             return !Directory.EnumerateFileSystemEntries(path).Any();
         }
 
-        private static readonly HttpClient HClient = new();
+        private static readonly HttpClient HClient = new() { Timeout = TimeSpan.FromSeconds(30) };
 
         public static string DownloadString(string uri)
         {
             try
             {
-                return HClient.GetStringAsync(uri).Result;
+                return DownloadStringAsync(uri).GetAwaiter().GetResult();
             }
             catch (Exception e)
             {
                 WriteToLog($"Failed to download string from: {uri}", e);
                 return "";
             }
+        }
+        public static async Task<string> DownloadStringAsync(string uri)
+        {
+            return await HClient.GetStringAsync(uri).ConfigureAwait(false);
         }
         public static bool DownloadFile(string url, string path)
         {
@@ -310,7 +314,7 @@ namespace TcNo_Acc_Switcher_Globals
                 if (!Uri.TryCreate(url, UriKind.Absolute, out _))
                     throw new InvalidOperationException("URI is invalid.");
 
-                var fileBytes = HClient.GetByteArrayAsync(url).Result;
+                var fileBytes = HClient.GetByteArrayAsync(url).GetAwaiter().GetResult();
                 if (path.Contains('\\')) Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                 File.WriteAllBytes(path, fileBytes);
             }
@@ -327,7 +331,7 @@ namespace TcNo_Acc_Switcher_Globals
                 if (!Uri.TryCreate(url, UriKind.Absolute, out _))
                     throw new InvalidOperationException("URI is invalid.");
 
-                var fileBytes = HClient.GetByteArrayAsync(url).Result;
+                var fileBytes = await HClient.GetByteArrayAsync(url).ConfigureAwait(false);
                 if (path.Contains('\\')) Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                 await File.WriteAllBytesAsync(path, fileBytes);
             }

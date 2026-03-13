@@ -22,6 +22,7 @@ using System.Management;
 using System.Runtime.Versioning;
 using System.Security.Principal;
 using System.ServiceProcess;
+using System.Text.RegularExpressions;
 
 namespace TcNo_Acc_Switcher_Globals
 {
@@ -157,6 +158,13 @@ namespace TcNo_Acc_Switcher_Globals
                 if (!processList.Any())
                     return true;
 
+                // Validate process name to prevent command injection
+                if (!Regex.IsMatch(procName, @"^[a-zA-Z0-9._\-\s]{1,260}$"))
+                {
+                    WriteToLog($"Invalid process name rejected: {procName}");
+                    return false;
+                }
+
                 // Run alternate method if any still running
                 var outputText = "";
                 var startInfo = new ProcessStartInfo
@@ -164,7 +172,7 @@ namespace TcNo_Acc_Switcher_Globals
                     UseShellExecute = false,
                     WindowStyle = ProcessWindowStyle.Hidden,
                     FileName = "cmd.exe",
-                    Arguments = $"/C TASKKILL /F /T /IM {procName}*",
+                    Arguments = $"/C TASKKILL /F /T /IM \"{procName}\"*",
                     CreateNoWindow = true,
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true
