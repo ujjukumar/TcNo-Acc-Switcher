@@ -17,6 +17,10 @@ jobs:
 
   build:
     runs-on: windows-latest
+    env:
+      CONFIGURATION: Release
+      PLATFORM: x64
+
     steps:
 
     - name: Get current date
@@ -34,10 +38,8 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
 
     - name: Install NSIS
       run: choco install nsis -y
@@ -58,42 +60,59 @@ jobs:
         }
 
     - name: Restore NuGet packages
-      run: dotnet restore
+      run: nuget restore TcNo-Acc-Switcher-Server\TcNo-Acc-Switcher-Server.sln
 
-    # --- Build all projects in dependency order (matching appveyor.yml) ---
+    # --- Build all projects using msbuild (matches appveyor.yml, resolves $(SolutionDir)) ---
 
     - name: Publish Installer (self-contained)
       run: >
         dotnet publish TcNo-Acc-Switcher-Installer/TcNo-Acc-Switcher-Installer.csproj
         -c Release -r win-x64 --self-contained true
-        -o TcNo-Acc-Switcher-Client\bin\Installer\
+        -o ${{ github.workspace }}\TcNo-Acc-Switcher-Client\bin\Installer\
 
     - name: Publish Wrapper (self-contained)
       run: >
         dotnet publish TcNo-Acc-Switcher-Wrapper/TcNo-Acc-Switcher-Wrapper.csproj
         -c Release -r win-x64 --self-contained true
-        -o TcNo-Acc-Switcher-Client\bin\Wrapper\
+        -o ${{ github.workspace }}\TcNo-Acc-Switcher-Client\bin\Wrapper\
 
     - name: Build runas
       run: >
-        dotnet build runas/runas.csproj
-        -c Release -p:Platform=x64
-        -p:OutputPath=${{ github.workspace }}\TcNo-Acc-Switcher-Client\bin\runas\x64\Release\net10.0\
+        msbuild runas/runas.csproj
+        /p:Configuration=${{ env.CONFIGURATION }}
+        /p:Platform=${{ env.PLATFORM }}
+        /p:OutputPath=${{ github.workspace }}\TcNo-Acc-Switcher-Client\bin\runas\x64\Release\net10.0\
 
     - name: Build Globals
-      run: dotnet build TcNo-Acc-Switcher-Globals/TcNo-Acc-Switcher-Globals.csproj -c Release -p:Platform=x64
+      run: msbuild TcNo-Acc-Switcher-Globals/TcNo-Acc-Switcher-Globals.csproj /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=${{ env.PLATFORM }}
 
     - name: Build Tray
-      run: dotnet build TcNo-Acc-Switcher-Tray/TcNo-Acc-Switcher-Tray.csproj -c Release -p:Platform=x64
+      run: msbuild TcNo-Acc-Switcher-Tray/TcNo-Acc-Switcher-Tray.csproj /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=${{ env.PLATFORM }}
 
     - name: Build Updater
-      run: dotnet build TcNo-Acc-Switcher-Updater/TcNo-Acc-Switcher-Updater.csproj -c Release -p:Platform=x64
+      run: msbuild TcNo-Acc-Switcher-Updater/TcNo-Acc-Switcher-Updater.csproj /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=${{ env.PLATFORM }}
 
     - name: Build Server
-      run: dotnet build TcNo-Acc-Switcher-Server/TcNo-Acc-Switcher-Server.csproj -c Release -p:Platform=x64
+      run: msbuild TcNo-Acc-Switcher-Server/TcNo-Acc-Switcher-Server.csproj /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=${{ env.PLATFORM }}
 
     - name: Build Client
-      run: dotnet build TcNo-Acc-Switcher-Client/TcNo-Acc-Switcher-Client.csproj -c Release -p:Platform=x64
+      run: msbuild TcNo-Acc-Switcher-Client/TcNo-Acc-Switcher-Client.csproj /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=${{ env.PLATFORM }}
+
+    # --- Debug: list output directories to verify paths ---
+
+    - name: List build outputs
+      shell: cmd
+      run: |
+        echo === Installer ===
+        dir /B "TcNo-Acc-Switcher-Client\bin\Installer\" 2>nul || echo NOT FOUND
+        echo === Wrapper ===
+        dir /B "TcNo-Acc-Switcher-Client\bin\Wrapper\" 2>nul || echo NOT FOUND
+        echo === runas ===
+        dir /B "TcNo-Acc-Switcher-Client\bin\runas\x64\Release\net10.0\" 2>nul || echo NOT FOUND
+        echo === Client build ===
+        dir /B "TcNo-Acc-Switcher-Client\bin\x64\Release\net10.0-windows10.0.19041.0\" 2>nul || echo NOT FOUND
+        echo === Server runtimes ===
+        dir /B "TcNo-Acc-Switcher-Server\bin\x64\Release\net10.0\runtimes\win\lib\net10.0\" 2>nul || echo NOT FOUND
 
     # --- Post-build assembly (replicates PostBuild.bat logic) ---
 
