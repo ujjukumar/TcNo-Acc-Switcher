@@ -60,7 +60,7 @@ jobs:
         }
 
     - name: Restore NuGet packages
-      run: nuget restore TcNo-Acc-Switcher-Server\TcNo-Acc-Switcher-Server.sln
+      run: dotnet restore TcNo-Acc-Switcher.slnx
 
     # --- Build all projects using msbuild (matches appveyor.yml, resolves $(SolutionDir)) ---
 
@@ -96,7 +96,7 @@ jobs:
       run: msbuild TcNo-Acc-Switcher-Server/TcNo-Acc-Switcher-Server.csproj /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=${{ env.PLATFORM }}
 
     - name: Build Client
-      run: msbuild TcNo-Acc-Switcher-Client/TcNo-Acc-Switcher-Client.csproj /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=${{ env.PLATFORM }}
+      run: msbuild TcNo-Acc-Switcher-Client/TcNo-Acc-Switcher-Client.csproj /p:Configuration=${{ env.CONFIGURATION }} /p:Platform=${{ env.PLATFORM }} /p:SkipPostBuild=true
 
     # --- Debug: list output directories to verify paths ---
 
